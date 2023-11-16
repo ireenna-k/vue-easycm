@@ -49,6 +49,7 @@ module.exports = {
     extensions: ['*', '.js', '.vue', '.json']
   },
   devServer: {
+    hot: true,
     historyApiFallback: true,
     noInfo: true,
     overlay: true
@@ -77,5 +78,10 @@ if (process.env.NODE_ENV === 'production') {
     new webpack.LoaderOptionsPlugin({
       minimize: true
     })
+  ])
+}
+if (process.env.NODE_ENV === 'development') {
+  module.exports.plugins = (module.exports.plugins || []).concat([
+    new webpack.HotModuleReplacementPlugin()
   ])
 }

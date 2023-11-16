@@ -1,12 +1,12 @@
 <template>
-  <div class="cm-container" :style="axisComputed" v-if="show">
+  <div class="cm-container" :style="axisComputed" v-if="show" @keydown="handleKeyDown($event)" ref="contextMenuContainer">
     <svg aria-hidden="true" style="position: absolute; width: 0px; height: 0px; overflow: hidden;"><symbol id="icon-youjiantou" viewBox="0 0 1024 1024"><path d="M288.791335 65.582671l446.41733 446.417329-446.41733 446.417329z"></path></symbol></svg>
     <!--first-->
     <ul class="cm-ul cm-ul-1 easy-cm-ul"
         :class="underline?'cm-underline':''">
       <li v-for="(item, index) in list" :style="liStyle">
         <div @click.stop="callback([index])"
-             :class="firstLeft?'cm-left':''">
+             :class="firstLeft?'cm-left':''"  tabindex="0">
           <i :class="item.icon"></i>
           <span>{{item.text}}</span>
           <svg class="icon" aria-hidden="true"
@@ -116,6 +116,16 @@
       document.addEventListener('click', () => {
           this.show = false
       }, true)
+      this.$watch('show', (newValue) => {
+        if (newValue) {
+          this.$nextTick(() => {
+            const firstMenuItem = this.$el.querySelector('.cm-ul li:first-child div');
+            if (firstMenuItem) {
+              firstMenuItem.focus();
+            }
+          });
+        }
+      });
     },
     watch: {
       axis() {
@@ -173,7 +183,40 @@
       },
       callback (indexList){
         this.$emit('ecmcb',indexList)
+      },
+      handleKeyDown(event) {
+      if (this.show) {
+        const container = this.$refs.contextMenuContainer;
+
+        if (event.key === 'ArrowDown') {
+          // Handle moving focus downwards
+          event.preventDefault();
+          const focusedElement = document.activeElement;
+          const menuItems = container.querySelectorAll('.cm-ul li div');
+
+          const index = Array.from(menuItems).findIndex(item => item === focusedElement);
+          const nextIndex = index < menuItems.length - 1 ? index + 1 : 0;
+
+          menuItems[nextIndex].focus();
+        } else if (event.key === 'ArrowUp') {
+          // Handle moving focus upwards
+          event.preventDefault();
+          const focusedElement = document.activeElement;
+          const menuItems = container.querySelectorAll('.cm-ul li div');
+
+          const index = Array.from(menuItems).findIndex(item => item === focusedElement);
+          const prevIndex = index > 0 ? index - 1 : menuItems.length - 1;
+
+          menuItems[prevIndex].focus();
+        } else if (event.key === 'Enter') {
+          // Handle "Enter" key press
+          event.preventDefault();
+          const focusedElement = document.activeElement;
+          focusedElement.click();
+          // If you have additional logic on 'Enter', add it here
+        }
       }
+    }
     }
   }
 </script>
