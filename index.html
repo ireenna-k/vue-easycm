@@ -31,7 +31,7 @@
           background-color: #df5000;
           color: #ffffff;
         }
-        .li-6 .easy-cm-ul li div:hover{
+        .li-6 .easy-cm-ul li div:hover, .li-6 .easy-cm-ul li div:focus{
           background-color: #ffffff!important;
           color: #df5000!important;
         }
@@ -62,43 +62,9 @@
     <h3>在小方块上右击展示</h3>
     <h4>调整网页宽高查看边界检测</h4>
     <ul class="demo-ul">
-      <li @contextmenu="$easycm($event,$root,1)" style="background-color:#509992;">
-        <easy-cm :list="[{text: 'Hello '},{text: 'World '}]" :tag="1"></easy-cm>
-        最简
-      </li>
-      <li @contextmenu="$easycm($event,$root,2)" style="background-color:#dd8896;">
-        <easy-cm :list="[{text: 'Hello '},{text: 'World '}]" :underline="true" :tag="2"></easy-cm>
-        下划线
-      </li>
-      <li @contextmenu="$easycm($event,$root,3)" style="background-color:#ddc663;">
-        <easy-cm :list="[{text: 'Hello '},{text: 'More',children:[{text:'Boen'},{text:'World'}]}]"  :underline="true" :arrow="true" :tag="3"></easy-cm>
-        子层箭头
-      </li>
-      <li @contextmenu="$easycm($event,$root,4)" style="background-color:#d4b4dd;">
-        <easy-cm :list="[{
-          text: 'Play Now',
-          icon: 'iconfont icon-bofang'
-        },{
-          text: 'Play Next',
-          icon: 'iconfont icon-xiayishou'
-        }]" :underline="true" :arrow="true" :tag="4"></easy-cm>
-        字体图标
-      </li>
       <li @contextmenu="$easycm($event,$root,5)" style="background-color:#a5dd68;">
-        <easy-cm :list="cmList" :underline="true" :arrow="true" :tag="5"></easy-cm>
+        <easy-cm :list="cmList" :underline="true" :arrow="true" :tag="5" @ecmcb="test"></easy-cm>
         多层菜单
-      </li>
-      <li @contextmenu="$easycm($event,$root,8)" style="background-color:#80a0ff;">
-        <easy-cm :list="cmList" :underline="true" :arrow="true" :tag="8" :offset="{x:20,y:20}"></easy-cm>
-        触发点偏移
-      </li>
-      <li @contextmenu="$easycm($event,$root,9)" style="background-color:#ffb4d2;">
-        <easy-cm :list="cmList" :underline="true" :arrow="true"  :tag="9" :item-width="200" :item-height="50"></easy-cm>
-        选项宽高
-      </li>
-      <li class="li-6" @contextmenu="$easycm($event,$root,6)" style="background-color:#ffaa5d;">
-        <easy-cm :list="cmList" :underline="true" :arrow="true" :tag="6"></easy-cm>
-        自定义样式
       </li>
       <li @contextmenu="$easycm($event,$root,7)" style="background-color:#58c0dd;">
         <easy-cm :list="cmList" @ecmcb="test" :underline="true" :arrow="true" :tag="7"></easy-cm>
@@ -113,42 +79,52 @@
     data:{
         msg: 'Welcome to Your Vue.js App',
         cmList: [{
-          text: 'Play Now',
-          icon: 'iconfont icon-bofang'
+          text: 'More',
+          shortcut: '1',
+          children:[{
+              text: 'Other-1',
+              shortcut: '1'
+            },{
+              text: 'Other-2',
+              shortcut: '2'
+            },{
+              text: 'Other-3',
+              shortcut: '5'
+            }]
         },{
           text: 'Play Next',
           icon: 'iconfont icon-xiayishou'
         },{
+          text: 'Play Now',
+          icon: 'iconfont icon-bofang',
+          shortcut: '2'
+        },{
+          text: 'Play Next',
+          icon: 'iconfont icon-xiayishou',
+          shortcut: '3'
+        },{
           text: 'More',
-          children: [{
-            text: 'Download',
-            children: []
-          },{
-            text: 'Report'
-          },{
-            text: 'Other',
-            icon: 'iconfont icon-bofang',
-            children:[{
-              text: 'Other-1'
+          shortcut: '4',
+          children:[{
+              text: 'Other-1',
+              shortcut: '1'
             },{
-              text: 'Other-2'
+              text: 'Other-2',
+              shortcut: '2'
             },{
-              text: 'Other-3'
+              text: 'Other-3',
+              shortcut: '5'
             }]
-          }]
+        },{
+          text: 'Play Next',
+          icon: 'iconfont icon-xiayishou'
         }]
     },
     methods:{
       test(indexList){
         switch (indexList[0]){
-          case 0:
-            alert('立即播放');
-            break
-          case 1:
-            alert('下一首播放')
-            break
           default:
-            alert('其他的')
+            console.log('TEST')
             break
         }
       }

@@ -1,5 +1,5 @@
 <template>
-  <div class="cm-container" :style="axisComputed" v-if="show" @keydown="handleKeyDown($event)" ref="contextMenuContainer">
+  <div class="cm-container" :style="axisComputed" v-if="show" @mouseover=handleMouseover($event) @keydown="handleKeyDown($event)" ref="contextMenuContainer">
     <svg aria-hidden="true" style="position: absolute; width: 0px; height: 0px; overflow: hidden;"><symbol id="icon-youjiantou" viewBox="0 0 1024 1024"><path d="M288.791335 65.582671l446.41733 446.417329-446.41733 446.417329z"></path></symbol></svg>
     <!--first-->
     <ul class="cm-ul cm-ul-1 easy-cm-ul"
@@ -8,6 +8,7 @@
         <div @click.stop="callback([index])"
              :class="firstLeft?'cm-left':''"  tabindex="0">
           <i :class="item.icon"></i>
+          <span v-if="item.shortcut" class="shortcut">{{item.shortcut}}</span>
           <span>{{item.text}}</span>
           <svg class="icon" aria-hidden="true"
                v-if="arrow && item.children && item.children.length > 0">
@@ -22,8 +23,9 @@
           <li v-for="(second, si) in item.children"
               :style="liStyle">
             <div @click.stop="callback([index,si])"
-                 :class="secondLeft?'cm-left':''">
+                 :class="secondLeft?'cm-left':''" tabindex="0">
               <i :class="second.icon"></i>
+              <span v-if="second.shortcut" class="sub-shortcut">{{second.shortcut}}</span>
               <span>{{second.text}}</span>
               <svg class="icon" aria-hidden="true"
                    v-if="arrow && second.children && second.children.length > 0">
@@ -111,21 +113,17 @@
         if (axis.tag == this.tag){
             this.show = true
             this.axis = axis
+            this.$nextTick(() => {
+            const firstMenuItem = this.$el.querySelector('.cm-ul li:first-child div');
+            if (firstMenuItem) {
+              firstMenuItem.focus();
+            }});
         }
       })
       document.addEventListener('click', () => {
           this.show = false
       }, true)
-      this.$watch('show', (newValue) => {
-        if (newValue) {
-          this.$nextTick(() => {
-            const firstMenuItem = this.$el.querySelector('.cm-ul li:first-child div');
-            if (firstMenuItem) {
-              firstMenuItem.focus();
-            }
-          });
-        }
-      });
+      
     },
     watch: {
       axis() {
@@ -184,39 +182,119 @@
       callback (indexList){
         this.$emit('ecmcb',indexList)
       },
+      handleMouseover(event){
+        if (this.show) {
+          const elementToFocus = event.target;
+          elementToFocus.focus();
+        }
+      },
       handleKeyDown(event) {
-      if (this.show) {
+        if (!this.show) return;
+
+        event.preventDefault();
+        //set up all the common default variables
         const container = this.$refs.contextMenuContainer;
+        const focusedElement = document.activeElement;
+        const submenu = focusedElement.nextElementSibling;
 
-        if (event.key === 'ArrowDown') {
-          // Handle moving focus downwards
-          event.preventDefault();
-          const focusedElement = document.activeElement;
-          const menuItems = container.querySelectorAll('.cm-ul li div');
+        //returns true if element is a submenu
+        const checkSubmenu=(element)=>{
+          return element && element.classList.contains('cm-ul-2');
+        }
 
+        const handleSubMenuNavigation = () => {
+          const submenuItems = container.querySelectorAll('.cm-ul-2 > li > div');
+          const subIndex = Array.from(submenuItems).findIndex(item => item === focusedElement);
+          const subNextIndex = subIndex >= 0 ? (event.key === 'ArrowDown' ? (subIndex < submenuItems.length - 1 ? subIndex + 1 : 0) : (subIndex > 0 ? subIndex - 1 : submenuItems.length - 1)) : 0;
+          submenuItems[subNextIndex].focus();
+        };
+
+        const handleMainMenuNavigation = () => {
+          const menuItems = Array.from(container.children[1].children).map(li => li.querySelector('div:first-child'));
           const index = Array.from(menuItems).findIndex(item => item === focusedElement);
-          const nextIndex = index < menuItems.length - 1 ? index + 1 : 0;
-
+          const nextIndex = index >= 0 ? (event.key === 'ArrowDown' ? (index < menuItems.length - 1 ? index + 1 : 0) : (index > 0 ? index - 1 : menuItems.length - 1)) : 0;
+          if (checkSubmenu(submenu)) {
+            submenu.style.display = 'none';
+          }
           menuItems[nextIndex].focus();
-        } else if (event.key === 'ArrowUp') {
-          // Handle moving focus upwards
-          event.preventDefault();
-          const focusedElement = document.activeElement;
-          const menuItems = container.querySelectorAll('.cm-ul li div');
+        };
 
-          const index = Array.from(menuItems).findIndex(item => item === focusedElement);
-          const prevIndex = index > 0 ? index - 1 : menuItems.length - 1;
+        const selectElement = (elementToSelect)=>{
+          elementToSelect.focus();
+          if(elementToSelect.nextElementSibling){ //for cases when the menu item has submenu
+            elementToSelect.nextElementSibling.style.display = 'block';
+          }else{ //for cases when item has no submenu
+            setTimeout(() => {
+              elementToSelect.click();
+            }, 70);
+          }
+        }
 
-          menuItems[prevIndex].focus();
-        } else if (event.key === 'Enter') {
-          // Handle "Enter" key press
-          event.preventDefault();
-          const focusedElement = document.activeElement;
-          focusedElement.click();
-          // If you have additional logic on 'Enter', add it here
+        const handleShortcut = (key)=>{
+          let querySelector = '.shortcut';
+          //for cases when this is submenu
+          if (checkSubmenu(submenu) && !['none', ''].includes(submenu.style.display)) {
+            querySelector = '.sub-shortcut';
+          }
+          const elementsWithShortcuts = container.querySelectorAll(querySelector);
+          const foundElement = Array.from(elementsWithShortcuts).find(item=>item.textContent === key);
+          if(foundElement){
+            const elementToFocus = foundElement.parentElement;
+            selectElement(elementToFocus);
+          }
+        };
+
+
+        switch (event.key) {
+          case 'ArrowDown':
+          case 'ArrowUp':
+            if (focusedElement && checkSubmenu(focusedElement.parentElement.parentElement)) {
+              handleSubMenuNavigation();
+            } else {
+              handleMainMenuNavigation();
+            }
+            break;
+
+          case 'Enter':
+            if (checkSubmenu(submenu)) {
+              submenu.style.display = 'block';
+            } else {
+              focusedElement.click();
+            }
+            break;
+
+          case 'ArrowRight':
+          case 'ArrowLeft':
+            if (checkSubmenu(submenu)) {
+              submenu.style.display = 'block';
+              const firstSubmenuItem = submenu.querySelector('.cm-ul-2 li:first-child div');
+              if (firstSubmenuItem) {
+                firstSubmenuItem.focus();
+              }
+            } else {
+              const parentElement = focusedElement.parentElement.parentElement;
+              if (checkSubmenu(parentElement)) {
+                const mainMenuActiveItem = parentElement.previousElementSibling;
+                parentElement.style.display = 'none';
+                mainMenuActiveItem.focus();
+              }
+            }
+            break;
+          default:
+            //handle other keys
+            let key;
+            if(event.key >="0" && event.key <="9"){
+              key = event.key;
+            }else if(event.code >= "KeyA" && event.code <= "KeyZ"){
+              // use event.code to prevent the keyboard from having another language letter
+              key = event.code.replace("Key",""); 
+            }
+            if(key !== undefined){
+              handleShortcut(key);
+            }
+            break;
         }
       }
-    }
     }
   }
 </script>
@@ -278,7 +356,13 @@
     text-align: center;
   }
   .cm-ul li div:hover{
+    background-color: #989898;
+    outline-width: 0;
+    color: #fff;
+  }
+  .cm-ul li div:focus-visible{
     background-color: #666666;
+    outline-width: 0;
     color: #fff;
   }
   .cm-ul-2,.cm-ul-3 {
