@@ -82,14 +82,8 @@
           text: 'More',
           shortcut: '1',
           children:[{
-              text: 'Other-1',
+              text: 'FIRST-1',
               shortcut: '1'
-            },{
-              text: 'Other-2',
-              shortcut: '2'
-            },{
-              text: 'Other-3',
-              shortcut: '5'
             }]
         },{
           text: 'Play Next',
@@ -122,11 +116,7 @@
     },
     methods:{
       test(indexList){
-        switch (indexList[0]){
-          default:
-            console.log('TEST')
-            break
-        }
+            console.log(indexList);
       }
     }
   })

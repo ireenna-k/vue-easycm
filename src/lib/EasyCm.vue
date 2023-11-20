@@ -231,12 +231,11 @@
         }
 
         const handleShortcut = (key)=>{
-          let querySelector = '.shortcut';
+          let elementsWithShortcuts = container.querySelectorAll('.shortcut');
           //for cases when this is submenu
           if (checkSubmenu(submenu) && !['none', ''].includes(submenu.style.display)) {
-            querySelector = '.sub-shortcut';
+            elementsWithShortcuts = submenu.querySelectorAll('.sub-shortcut');
           }
-          const elementsWithShortcuts = container.querySelectorAll(querySelector);
           const foundElement = Array.from(elementsWithShortcuts).find(item=>item.textContent === key);
           if(foundElement){
             const elementToFocus = foundElement.parentElement;
